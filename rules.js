@@ -80,3 +80,54 @@ export function resolveWindTest(ship, wind, die) {
   const {angle,bias}=minimumWindTurn(ship,wind);
   return {success:true,angle,ship:{...turnAtStern(ship,angle),bias}};
 }
+
+// Clip movement at the first contact of the rectangular hull with the sea edge.
+const EDGE_EPS=1e-7;
+function hullHalfExtents(heading){
+ const a=heading*Math.PI/180,c=Math.abs(Math.cos(a)),s=Math.abs(Math.sin(a));
+ return {x:CELL_PX*(c/2+s),y:CELL_PX*(s/2+c)};
+}
+export function straightToEdge(ship,cm){
+ const dest=move(ship,cm),half=hullHalfExtents(ship.heading);
+ const times=[];
+ for(const [axis,size] of [['x',SEA_WIDTH],['y',SEA_HEIGHT]]){
+   const delta=dest[axis]-ship[axis];
+   if(delta>EDGE_EPS)times.push((size-half[axis]-ship[axis])/delta);
+   else if(delta< -EDGE_EPS)times.push((half[axis]-ship[axis])/delta);
+ }
+ const t=Math.min(...times);
+ if(t>1+EDGE_EPS)return {ship:dest,hit:false};
+ return {ship:move(ship,cm*Math.max(0,Math.min(1,t))),hit:true};
+}
+export function turnToEdge(ship,angle,centre=false){
+ const rotate=centre?turnAtCentre:turnAtStern;
+ if(!angle)return {ship:{...ship},hit:false};
+ const pivot=centre?ship:sternPivot(ship,angle);
+ const side=Math.sign(angle),end=Math.abs(angle)*Math.PI/180;
+ const start=ship.heading*Math.PI/180;
+ let first=Infinity;
+ for(const x of [-CELL_PX/2,CELL_PX/2])for(const y of [-CELL_PX,CELL_PX]){
+   const u=x-(centre?0:side*CELL_PX/2),v=y-(centre?0:CELL_PX);
+   const radius=Math.hypot(u,v);
+   if(!radius)continue;
+   const offset=Math.atan2(v,u);
+   for(const [base,shift,walls] of [[pivot.x,0,[0,SEA_WIDTH]],[pivot.y,-Math.PI/2,[0,SEA_HEIGHT]]]){
+     for(const wall of walls){
+       const ratio=(wall-base)/radius;
+       if(Math.abs(ratio)>1+EDGE_EPS)continue;
+       const a=Math.acos(Math.max(-1,Math.min(1,ratio)));
+       for(const root of [-a,a]){
+         const t=norm(side*(root-start-offset-shift)*180/Math.PI)*Math.PI/180;
+         if(t<=end+EDGE_EPS)first=Math.min(first,t);
+       }
+     }
+   }
+ }
+ return first===Infinity?{ship:rotate(ship,angle),hit:false}:
+   {ship:rotate(ship,side*Math.min(first,end)*180/Math.PI),hit:true};
+}
+export function reenterSea(ship,heading){
+ const h=hullHalfExtents(heading),inset=0.001;
+ const fit=(n,r,size)=>Math.max(r+inset,Math.min(n,size-r-inset));
+ return {...ship,heading,x:fit(ship.x,h.x,SEA_WIDTH),y:fit(ship.y,h.y,SEA_HEIGHT)};
+}

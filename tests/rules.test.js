@@ -75,3 +75,26 @@ test('1・2は元の船首方向へ8cm直進してLv0、3以上で成功',()=>{
   {success:false,angle:0,ship:{...ship,y:308,speed:0}});
  for(const die of [3,4,5,6]) assert.equal(resolveWindTest(ship,0,die).success,true);
 });
+
+test('直進は船体の先端が境界に触れた時点で止まる',async()=>{
+ const {straightToEdge,reenterSea}=await import('../rules.js');
+ const ship={x:300,y:50,heading:0,speed:2};
+ const result=straightToEdge(ship,8);
+ assert.equal(result.hit,true);
+ assert.equal(result.ship.y,24);
+ assert.equal(result.ship.speed,2);
+ assert.equal(straightToEdge(ship,1).hit,false);
+ const returned=reenterSea(result.ship,180);
+ assert.equal(returned.speed,2);
+ assert.ok(returned.y>=24);
+ assert.equal(straightToEdge(returned,8).hit,false);
+});
+test('回頭中に船体が触れた場合も最初の接触で止まる',async()=>{
+ const {turnToEdge}=await import('../rules.js');
+ const ship={x:300,y:25,heading:0,speed:0};
+ const result=turnToEdge(ship,180,true);
+ assert.equal(result.hit,true);
+ assert.ok(result.ship.heading>0&&result.ship.heading<45);
+ assert.equal(result.ship.y,25);
+ assert.equal(turnToEdge({...ship,y:100},45).hit,false);
+});
