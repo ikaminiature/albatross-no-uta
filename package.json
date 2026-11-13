@@ -1,0 +1,1 @@
+{"name":"albatross-no-uta","private":true,"type":"module","scripts":{"start":"python3 -m http.server 8000 --bind 0.0.0.0","test":"node --test"}}
