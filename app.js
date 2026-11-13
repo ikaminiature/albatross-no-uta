@@ -7,6 +7,7 @@ function reset(){if(scanFrame!==null)cancelAnimationFrame(scanFrame);scanFrame=n
 function log(s){logs.unshift(s)}
 function active(){return ships.find(s=>s.id===queue[index])}
 function begin(){
+ paths=[]; // Keep the completed turn visible until the next one starts.
  const previous=wind;
  die=1+Math.floor(Math.random()*6);
  wind=windAfterRoll(wind,die);
@@ -77,7 +78,7 @@ function draw(){
  const art=seaTiles.map(({col,row,src})=>
    `<image href="${encodeURI(src)}" x="${col*c}" y="${row*c}" width="${c}" height="${c}"/>`).join('');
  let svg=`<defs><pattern id="grid" width="${c}" height="${c}" patternUnits="userSpaceOnUse"><path d="M${c} 0H0V${c}" fill="none" stroke="#8dafa4" stroke-width="1"/></pattern><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="#54786c"/></marker></defs><rect width="${w}" height="${h}" fill="#d7e9e4"/><g id="sea-art" aria-hidden="true">${art}</g><rect width="${w}" height="${h}" fill="url(#grid)"/>`;
- svg+=paths.slice(-30).map(p=>`<path d="M${p.x} ${p.y}L${p.tx} ${p.ty}" stroke="#7e998b" stroke-dasharray="4 6" fill="none"/>`).join('');
+ svg+=paths.map(p=>`<path class="movement-trail" d="M${p.x} ${p.y}L${p.tx} ${p.ty}" stroke="#537d74" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="4 6" fill="none"/>`).join('');
  if(scan){
    const p=scan.reversed?scan.length-scan.position:scan.position;
    const line=scan.horizontal?`M${p} 0V${h}`:`M0 ${p}H${w}`;
