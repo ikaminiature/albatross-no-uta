@@ -18,9 +18,9 @@ export function speeds(speed, cap, success=false) {
   return [speed-1,speed,speed+1].filter(s=>s>=0 && s<=3);
 }
 export const LEG_CM = 8;
-export function sailingPlan(startSpeed, nextSpeed, failed=false) {
-  const free = !failed && startSpeed === 0 && nextSpeed === 0;
-  return {free, legs:Math.max(1,nextSpeed), distance:free||failed?0:LEG_CM};
+export function sailingPlan(startSpeed, nextSpeed) {
+  const free = startSpeed === 0 && nextSpeed === 0;
+  return {free, legs:Math.max(1,nextSpeed), distance:free?0:LEG_CM};
 }
 // Wind is the source bearing. Progress starts at the corresponding sea edge.
 export function windSweep(ships, wind) {
@@ -59,4 +59,24 @@ export function turnAtStern(ship, angle) {
   const heading=norm(ship.heading+angle);
   const offset=rotateOffset(Math.sign(angle)*CELL_PX/2,CELL_PX,heading);
   return {...ship,x:pivot.x-offset.x,y:pivot.y-offset.y,heading};
+}
+
+export function turnAtCentre(ship, angle) {
+  return {...ship,heading:norm(ship.heading+angle)};
+}
+export function minimumWindTurn(ship, wind) {
+  if (ship.speed <= limit(ship.heading,wind,ship.bias)) return {angle:0,bias:ship.bias};
+  const candidates = [45,135,225,315].flatMap(offset=>{
+    const heading = norm(wind + offset);
+    const cw = norm(heading-ship.heading);
+    return ['cw','ccw'].filter(bias=>limit(heading,wind,bias)>=ship.speed)
+      .map(bias=>({angle:cw>180?cw-360:cw,bias}));
+  });
+  return candidates.sort((a,b)=>Math.abs(a.angle)-Math.abs(b.angle)||b.angle-a.angle)[0];
+}
+export function resolveWindTest(ship, wind, die) {
+  if (!Number.isInteger(die) || die<1 || die>6) throw new RangeError('d6 must be 1–6');
+  if (die<3) return {success:false,angle:0,ship:{...move(ship,LEG_CM),speed:0}};
+  const {angle,bias}=minimumWindTurn(ship,wind);
+  return {success:true,angle,ship:{...turnAtStern(ship,angle),bias}};
 }
