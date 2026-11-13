@@ -12,8 +12,15 @@ export function limit(heading, wind, bias = 'cw') {
   if ([45,135,225,315].some(b => Math.abs(a-b)<1e-7)) a=norm(a+(bias==='cw'?-0.001:0.001));
   return a<45 || a>315 ? 0 : a>135 && a<225 ? 3 : 2;
 }
+// The wind checks the incoming level, not the newly chosen level.
 export function speeds(speed, cap, success=false) {
-  return [speed-1,speed,speed+1].filter(s=>s>=0 && s<=3 && (success || s<=cap));
+  if (!success && speed > cap) return [];
+  return [speed-1,speed,speed+1].filter(s=>s>=0 && s<=3);
+}
+export const LEG_CM = 8;
+export function sailingPlan(startSpeed, nextSpeed, failed=false) {
+  const free = !failed && startSpeed === 0 && nextSpeed === 0;
+  return {free, legs:Math.max(1,nextSpeed), distance:free||failed?0:LEG_CM};
 }
 // Wind is the source bearing. Progress starts at the corresponding sea edge.
 export function windSweep(ships, wind) {
@@ -33,7 +40,23 @@ export function windSweep(ships, wind) {
 export function order(ships, wind) {
   return windSweep(ships,wind).hits.map(({id})=>id);
 }
-export function move(ship, speed) {
+export function move(ship, distanceCm) {
   const a=ship.heading*Math.PI/180;
-  return {...ship,x:ship.x+Math.sin(a)*speed*CELL_PX,y:ship.y-Math.cos(a)*speed*CELL_PX};
+  return {...ship,x:ship.x+Math.sin(a)*distanceCm*CELL_PX,y:ship.y-Math.cos(a)*distanceCm*CELL_PX};
+}
+
+function rotateOffset(x,y,heading) {
+  const radians=heading*Math.PI/180;
+  return {x:x*Math.cos(radians)-y*Math.sin(radians),y:x*Math.sin(radians)+y*Math.cos(radians)};
+}
+export function sternPivot(ship, angle) {
+  const offset=rotateOffset(Math.sign(angle)*CELL_PX/2,CELL_PX,ship.heading);
+  return {x:ship.x+offset.x,y:ship.y+offset.y};
+}
+export function turnAtStern(ship, angle) {
+  if (!angle) return {...ship};
+  const pivot=sternPivot(ship,angle);
+  const heading=norm(ship.heading+angle);
+  const offset=rotateOffset(Math.sign(angle)*CELL_PX/2,CELL_PX,heading);
+  return {...ship,x:pivot.x-offset.x,y:pivot.y-offset.y,heading};
 }
