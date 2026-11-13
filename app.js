@@ -12,6 +12,7 @@ function begin(){
  die=1+Math.floor(Math.random()*6);
  wind=windAfterRoll(wind,die);
  turn++;
+ // Rank returning ships at their saved departure pose before choosing a new heading.
  for(const s of ships)if(s.returnTurn===turn){s.reentering=true;log(`船${s.id} が海域に復帰（Lv${s.speed}）`);}
  scan={...windSweep(ships.filter(s=>!s.returnTurn||s.reentering),wind),position:0,next:0};
  ranks.clear();queue=[];index=0;phase='scan';
@@ -128,14 +129,14 @@ function render(){
  $('#windroll').textContent=die===null?'開始前の風向き':`第${turn}ターン · d6 ${die} · 時計回りに${Math.ceil(die/2)*90}°`;
  let html='';if(phase==='wind'){html=`<button class="primary" id="begin">${turn?'次のターンを開始':'ゲーム開始'}</button>${turn&&testNotice?`<p role="status">${testNotice}</p>`:''}`}
  else if(phase==='scan'){html='<p role="status" class="note">風上から行動順を決めています…</p>'}
- else {const s=active();html=`<span class="badge">ACTION ${index+1} / ${queue.length}</span><h2>船${s.id} の行動</h2><p>船首 ${s.heading}° ／ 現在の速力 ${s.speed}<br>${returning?'復帰時は風チェックなし':phase==='speed'||phase==='test'?`風チェックの上限 <b>${cap}</b>`:'この行動中は風による再チェックなし'}</p>`;
+ else {const s=active();html=`<span class="badge">ACTION ${index+1} / ${queue.length}</span><h2>船${s.id} の${phase==='return'?'復帰・回頭':'行動'}</h2><p>船首 ${s.heading}° ／ 現在の速力 ${s.speed}<br>${returning?'復帰時は風チェックなし':phase==='speed'||phase==='test'?`風チェックの上限 <b>${cap}</b>`:'この行動中は風による再チェックなし'}</p>`;
  if(testNotice)html+=`<p class="note" role="status">${testNotice}</p>`;
  if(phase==='test')html+='<p class="note"><strong>スキルテスト</strong><br>3〜6で成功、1・2で失敗。</p><button class="primary" id="skill-roll">d6を振る</button>';
  if(phase==='speed')html+=`<p>速力を選ぶ</p><div class="row">${speeds(s.speed,cap).map(v=>`<button data-speed="${v}">${['停帆','巡航','快走','最高速'][v]}<br>${v} ${v===s.speed?'維持':v>s.speed?'↑':'↓'}</button>`).join('')}</div>`;
  if(phase==='straight')html+=`<p class="note">${leg} / ${plan.legs}：船首方向に ${plan.distance}cm 直進してから回頭</p><button id="straight" class="primary">${plan.distance}cm 直進</button>`;
  if(phase==='return'){
  const h=norm(s.heading+angle);
- html+=`<p class="note">船首の向きを自由に選んでください。Lv${s.speed}を引き継ぎます。</p><label for="angle">船首：${h}°</label><input id="angle" type="range" min="-180" max="180" step="1" value="${angle}">`;
+ html+=`<p class="note">行動順は復帰地点で確定済みです。まず船首の向きを自由に決めてください。そのあと、引き継いだLv${s.speed}から速力を選びます。</p><label for="angle">船首：${h}°</label><input id="angle" type="range" min="-180" max="180" step="1" value="${angle}">`;
  if(boundary(h))html+=`<div class="row"><button data-bias="ccw" class="${bias==='ccw'?'selected':''}">反時計回り側</button><button data-bias="cw" class="${bias==='cw'?'selected':''}">時計回り側</button></div>`;
  html+=`<button id="return-ship" class="primary" ${boundary(h)&&!bias?'disabled':''}>向きを確定して速力を選ぶ</button>`;
  }
