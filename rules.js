@@ -1,6 +1,6 @@
 export const CELL_PX = 24;
-export const SEA_WIDTH = 60 * CELL_PX;
-export const SEA_HEIGHT = 80 * CELL_PX;
+export const SEA_WIDTH = 80 * CELL_PX;
+export const SEA_HEIGHT = 60 * CELL_PX;
 export const INITIAL_WIND = 0; // 風が来る方角：北
 export const norm = a => (a % 360 + 360) % 360;
 export function windAfterRoll(wind, die) {
@@ -15,9 +15,23 @@ export function limit(heading, wind, bias = 'cw') {
 export function speeds(speed, cap, success=false) {
   return [speed-1,speed,speed+1].filter(s=>s>=0 && s<=3 && (success || s<=cap));
 }
+// Wind is the source bearing. Progress starts at the corresponding sea edge.
+export function windSweep(ships, wind) {
+  const from = norm(wind);
+  const horizontal = from === 90 || from === 270;
+  const length = horizontal ? SEA_WIDTH : SEA_HEIGHT;
+  const reversed = from === 90 || from === 180;
+  const hits = ships.map(s => {
+    const radians = norm((s.heading ?? 0) - from) * Math.PI / 180;
+    // Project the rotated 2×1cm hull onto the scan axis, not just its centre.
+    const halfHull = CELL_PX * (Math.abs(Math.cos(radians)) + Math.abs(Math.sin(radians)) / 2);
+    const centre = horizontal ? s.x : s.y;
+    return {id:s.id, distance:(reversed ? length - centre : centre) - halfHull};
+  }).sort((a,b)=>Math.abs(a.distance-b.distance)<1e-8?a.id-b.id:a.distance-b.distance);
+  return {horizontal,length,reversed,hits};
+}
 export function order(ships, wind) {
-  const a=wind*Math.PI/180;
-  return [...ships].sort((s,t)=>{const d=(t.x-s.x)*Math.sin(a)-(t.y-s.y)*Math.cos(a);return Math.abs(d)<1e-8?s.id-t.id:d}).map(s=>s.id);
+  return windSweep(ships,wind).hits.map(({id})=>id);
 }
 export function move(ship, speed) {
   const a=ship.heading*Math.PI/180;

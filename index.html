@@ -3,14 +3,11 @@
 <body><header><div><small>ALBATROSS / NAVIGATION STUDY</small><h1>アルバトロスの詩 <span>航行試験</span></h1></div><button id="reset">最初から</button></header>
 <main><section class="chart"><div class="sea-frame">
 <span class="north">北</span><span class="west">西</span>
-<svg id="map" viewBox="0 0 1440 1920" role="img" aria-label="60×80cm相当の航行海図"></svg>
+<svg id="map" viewBox="0 0 1920 1440" role="img" aria-label="80×60cm相当の航行海図"></svg>
 <span class="east">東</span><span class="south">南</span>
-</div></section><aside><section class="wind-card" aria-label="風見鶏">
+</div></section><aside><section class="wind-card" aria-label="風向き">
 <svg viewBox="0 0 88 88" width="88" height="88" aria-hidden="true">
-<circle cx="44" cy="44" r="30" fill="none" stroke="#bdcfc1"/>
-<g text-anchor="middle" font-size="11" fill="#466861"><text x="44" y="12">北</text><text x="44" y="84">南</text><text x="6" y="48">西</text><text x="82" y="48">東</text></g>
-<g id="vane-arrow" fill="#376459"><path d="M44 18L37 29H42V66H46V29H51Z"/><path d="M42 53L33 59L42 63ZM46 53L55 59L46 63Z"/></g>
-<circle cx="44" cy="44" r="3" fill="#b07927"/>
+<g id="wind-arrow" fill="#376459"><path d="M38 20H50V53H64L44 75L24 53H38Z"/></g>
 </svg>
-<div aria-live="polite"><h2>風見鶏</h2><p id="windlabel"></p><p id="windroll"></p></div>
-</section><div id="panel"></div><details><summary>船団</summary><div id="fleet"></div><button id="add">＋ 船を追加（最大6隻）</button></details><details><summary>航行ルール・試作の扱い</summary><p>各船は同じ速力で「直進 → 最大45°回頭」を2回行います。速力0でも回頭できます。行動開始時から停帆を維持した船だけは、移動せず自由に回頭できます。</p><p>風見鶏の矢先は風が来る方角を指します。開始前は北から南。ターン開始時にd6を振り、風が来る方角を時計回りに回します。風上から順番に行動し、同じ位置なら船番号順。行動順と速力上限は、それぞれターン開始時・行動開始時に確定します。</p><p>四隅の破線は外向き45°の境界です。境界ちょうどの回頭では、船首を時計回り／反時計回りにわずかに寄せた扱いを記録します。記録は風が変わっても保持します。</p><p>テストは手動判定。失敗時は仮に速力0となり、通常の2回の回頭を行います。海図は横60×縦80cm相当、1cmは24×24の描画単位です。画面に合わせて縮小表示します。海図の端・衝突・交易・戦闘は扱いません。</p></details><details><summary>航海日誌</summary><div id="log"></div></details></aside></main><script type="module" src="app.js"></script></body></html>
+<div aria-live="polite"><h2>風向き</h2><p id="windlabel"></p><p id="windroll"></p></div>
+</section><div id="panel"></div><details><summary>船団</summary><div id="fleet"></div><button id="add">＋ 船を追加（最大6隻）</button></details><details><summary>航行ルール・試作の扱い</summary><p>各船は同じ速力で「直進 → 最大45°回頭」を2回行います。速力0でも回頭できます。行動開始時から停帆を維持した船だけは、移動せず自由に回頭できます。</p><p>風向きの矢印は風が抜けていく方角を指します。開始前は北から南。ターン開始時にd6を振り、風が来る方角を時計回りに回します。風に直交する線が海図を横切り、船体に当たった順が行動順です。同時に当たった場合は船番号順です。行動順と速力上限は、それぞれターン開始時・行動開始時に確定します。</p><p>四隅の破線は外向き45°の境界です。境界ちょうどの回頭では、船首を時計回り／反時計回りにわずかに寄せた扱いを記録します。記録は風が変わっても保持します。</p><p>テストは手動判定。失敗時は仮に速力0となり、通常の2回の回頭を行います。海図は横80×縦60cm相当、1cmは24×24の描画単位です。画面に合わせて縮小表示します。海図の端・衝突・交易・戦闘は扱いません。</p></details><details><summary>航海日誌</summary><div id="log"></div></details></aside></main><script type="module" src="app.js"></script></body></html>
